@@ -4,6 +4,7 @@ import numpy as _np
 
 from .field import Field
 from .propagators import Forvard, Fresnel, backward_compatible
+from .misc import PipFFT
 
 @backward_compatible
 def Axicon(Fin, phi, n1 = 1.5, x_shift = 0.0, y_shift = 0.0 ):
@@ -126,11 +127,15 @@ def Lens(Fin, f, x_shift = 0.0, y_shift = 0.0):
     Fout.field *= _np.exp(1j * fi)
     return Fout
 
-def LensFarfield(Fin, f ):
+def LensFarfield(Fin, f, index=1):
     """
     Use a direct FFT approach to calculate the far field of the input field.
     Given the focal length f, the correct scaling is applied and the
     output field will have it's values for size and dx correctly set.
+    If index=-1, an inverse FFT will be applied to go back from the focal
+    plane to the original lens. *For Fourier optics with a second conjugate
+    lens, I'm not sure whether to apply 1 or -1, or whether this is an invalid
+    method altogether!
 
     Parameters
     ----------
@@ -138,6 +143,9 @@ def LensFarfield(Fin, f ):
         Focal length in meters/ global units
     Fin : lp.Field
         The input field.
+    index: int
+        If 1, forward FFT (from lens to focal plane),
+        if -1, inverse FFT (from focal plane back to lens)
 
     Returns
     -------
@@ -158,9 +166,10 @@ def LensFarfield(Fin, f ):
         L'      [m] = size of FOV in focal plane
         dx'     [m] = grid spacing in focal plane
         
-        lam * f_L = dx' * L
-                  = dx * L'
+        lam * f_L = dx' * L = L' / N * L
+                  = dx * L' = L / N * L'
                   = dx * dx' * N
+        lam * f_L * N = L * L'
         
         given: N, dx', lam, f_L
         lemma: L' = N * dx'
@@ -169,12 +178,11 @@ def LensFarfield(Fin, f ):
         --> dx = L / N = lam * f_L / (N * dx') = lam * f_L / L' 
 
     """
-    Fout = Field.copy(Fin)
-    dx = Fout.dx
-    lam = Fout.lam
+    # Fout = Field.copy(Fin) #PipFFT already creates a copy, no need here
+    dx = Fin.dx
+    lam = Fin.lam
     L_prime = lam * f / dx
-    focusfield = _np.fft.fftshift(_np.fft.fft2(Fout.field))
-    Fout.field = focusfield
+    Fout = PipFFT(Fin, index)
     Fout.siz = L_prime
     return Fout
 
