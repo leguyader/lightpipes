@@ -7,7 +7,7 @@ from .units import *
 from .core import Phase, PhaseUnwrap, Intensity
 
 def Plot(F, unwrap = False, phaseblank =True, title='', circ_r=None, zoom=1,
-         figsize = None):
+         ph_units='rad', figsize = None):
     """
     Plot the field intensity and phase with matplotlib.
 
@@ -23,10 +23,10 @@ def Plot(F, unwrap = False, phaseblank =True, title='', circ_r=None, zoom=1,
         DESCRIPTION. The default is ''.
     circ_c : float, optional
         [m] radius of a circle to draw. The default is None, i.e. circle off.
-
+    :param ph_units: Units to plot phase in (rad, opd, lam, default=rad)
     Returns
     -------
-    None.
+    (fig, (ax_left, ax_right)) handles in a tuple.
 
     """
     
@@ -38,7 +38,8 @@ def Plot(F, unwrap = False, phaseblank =True, title='', circ_r=None, zoom=1,
     if title:
         fig.suptitle(title)
     PlotIntensity(F, circ_r, zoom, ax=ax1)
-    PlotPhase(F, unwrap, phaseblank, circ_r, zoom, ax=ax2)
+    PlotPhase(F, unwrap, phaseblank, circ_r, zoom, ph_units= ph_units, ax=ax2)
+    return fig, axs
 
 
 def PlotIntensity(F, circ_r=None, zoom=1, title='',
