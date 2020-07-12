@@ -95,7 +95,7 @@ from .core import BeamMix
 from .core import MultIntensity, MultPhase
 from .core import Normal, Power
 from .core import IntAttenuator
-from .misc import Tilt, Gain, PipFFT
+from .misc import Tilt, Gain, PipFFT, Wavefront_ptv, Wavefront_rms
 from .core import Interpol
 from .sources import PointSource, GaussBeam, PlaneWave
 from .userfunc import *
