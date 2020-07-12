@@ -193,15 +193,17 @@ def ZernikeFilter(F, j_terms, R, j_terms_to_fit=None):
     
     j_terms = _np.asarray(j_terms)
     if j_terms.ndim == 0:
-        j_terms = _np.arange(1, j_terms+1)
+        #scalar number entered, treat as j_max
+        j_terms = _np.arange(1, j_terms+1) #+1 since end is exclusive
     else:
+        #list/tuple/array of single or more numbers entered
         if not 1 in j_terms:
             j_terms = _np.array([1, *j_terms]) #always need the piston
             #TODO is this true? test if missing
             # in theory, should be orthogonal so no difference at all
             
     if not j_terms_to_fit:
-        j_terms_to_fit = j_terms
+        j_terms_to_fit = j_terms #default: same as terms to filter
     else:
         j_terms_to_fit = _np.asarray(j_terms_to_fit)
         if j_terms_to_fit.ndim == 0:
@@ -221,15 +223,17 @@ def ZernikeFilter(F, j_terms, R, j_terms_to_fit=None):
     
     Fout = Field.copy(F)
     
-    j_fits, A_fits = ZernikeFit(j_terms_to_fit, R, F, norm=True, units='rad')
+    j_fits, A_fits = ZernikeFit(F, j_terms_to_fit, R, norm=True, units='rad')
+    
+    r, phi = F.mgrid_polar
+    rho = r/R
     Ph = _np.zeros_like(F.field)
     
     for j_noll, A_i in zip(j_fits, A_fits):
         if j_noll not in j_terms:
             # if requested more to filter than to subtract, skip all these
             continue
-        # print(j_noll)
-        #amplitude for this abberation in rad -> no need to convert
+        #amplitude for this abberation is in rad -> no need to convert
         n, m = noll_to_zern(j_noll)
         if m==0:
             # wikipedia has modulo Pi? -> ignore for now
@@ -237,16 +241,12 @@ def ZernikeFilter(F, j_terms, R, j_terms_to_fit=None):
             Nnm = _np.sqrt(n+1)
         else:
             Nnm = _np.sqrt(2*(n+1))
-            
-        r, phi = F.mgrid_polar
-        rho = r/R
+        
         Ph_i = -A_i*Nnm*zernike(n,m, rho, phi)
         # Ph -= Ph_i
         Ph += Ph_i
     
     Fout.field *= _np.exp(-1j * Ph)
-    # Fout = Field.copy(F)
-    # Fout = SubPhase(Ph, Fout)
     return Fout
     
 
