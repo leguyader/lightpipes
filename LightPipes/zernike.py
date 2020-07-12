@@ -136,6 +136,8 @@ def ZernikeFit(F, j_terms, R,  norm=True, units='lam'):
     else:
         if not 1 in j_terms:
             j_terms = _np.array([1, *j_terms]) #always need the piston
+            #TODO is this true? test if missing
+            # in theory, should be orthogonal so no difference at all
     
     #Debug only filtered piston, but having it should always be allowed
     # if 1 in j_terms:
@@ -167,7 +169,7 @@ def ZernikeFit(F, j_terms, R,  norm=True, units='lam'):
     return (j_terms, A_fits)
 
 
-def ZernikeFilter(F, j_terms, R):
+def ZernikeFilter(F, j_terms, R, j_terms_to_fit=None):
     """
     *Compute the input field's wavefront, filter out the specified
     Zernike orders and return the field with filtered wavefront.*
@@ -177,19 +179,57 @@ def ZernikeFilter(F, j_terms, R):
     :param j_terms: iterable of int which terms to filter. Given in Noll notation.
     :type j_terms: float, int
     :param R: radius of Zernike definition
+    :param j_terms_to_fit: fit more than to filter if not on circular beam.(*)
     :return: output field (N x N square array of complex numbers).
     :rtype: `LightPipes.field.Field`
     
+    (*) If the input beam is not circular, but arbitrary in shape, the Zernike
+    polynomials are not orthogonal anymore, therefore it makes a difference how
+    many are analysed before subtracting the desired ones! In general, the more
+    modes are fitted the more it converges to an exact fit, but the only way
+    to be sure is to apply a CircAperture before doing a Zernike fit or filter.
+    
     """
-    j_terms, A_fits = ZernikeFit(j_terms, R, F, norm=True, units='rad')
-    # print(A_fits.round(4))
-    # Ph = Phase(F, unwrap=True)
+    
+    j_terms = _np.asarray(j_terms)
+    if j_terms.ndim == 0:
+        j_terms = _np.arange(1, j_terms+1)
+    else:
+        if not 1 in j_terms:
+            j_terms = _np.array([1, *j_terms]) #always need the piston
+            #TODO is this true? test if missing
+            # in theory, should be orthogonal so no difference at all
+            
+    if not j_terms_to_fit:
+        j_terms_to_fit = j_terms
+    else:
+        j_terms_to_fit = _np.asarray(j_terms_to_fit)
+        if j_terms_to_fit.ndim == 0:
+            j_terms_to_fit = _np.arange(1, j_terms_to_fit+1)
+        else:
+            if not 1 in j_terms_to_fit:
+                j_terms_to_fit = _np.array([1, *j_terms_to_fit])
+                #always need the piston
+                #TODO is this true? test if missing
+                # in theory, should be orthogonal so no difference at all
+    
+    if j_terms_to_fit.max() < j_terms.max():
+        raise ValueError('Subtracting more modes than filtering, '+
+                         'please use higher j_terms_to_fit')
+        #TODO add more sophisticated check if user provide array not
+        # max-number to check if all in-between values are present
+    
+    Fout = Field.copy(F)
+    
+    j_fits, A_fits = ZernikeFit(j_terms_to_fit, R, F, norm=True, units='rad')
     Ph = _np.zeros_like(F.field)
-    for idx in range(len(j_terms)):
-        j_noll = j_terms[idx]
-        A_i = A_fits[idx] #amplitude for this abberation in rad
-            # -> no need to convert
-        
+    
+    for j_noll, A_i in zip(j_fits, A_fits):
+        if j_noll not in j_terms:
+            # if requested more to filter than to subtract, skip all these
+            continue
+        # print(j_noll)
+        #amplitude for this abberation in rad -> no need to convert
         n, m = noll_to_zern(j_noll)
         if m==0:
             # wikipedia has modulo Pi? -> ignore for now
@@ -204,7 +244,6 @@ def ZernikeFilter(F, j_terms, R):
         # Ph -= Ph_i
         Ph += Ph_i
     
-    Fout = F
     Fout.field *= _np.exp(-1j * Ph)
     # Fout = Field.copy(F)
     # Fout = SubPhase(Ph, Fout)
