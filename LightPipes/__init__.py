@@ -75,7 +75,7 @@ __all__.extend([
 # avoid modified
 __all__ = tuple(__all__)
 
-import functools
+
 import numpy as np
 import webbrowser
 

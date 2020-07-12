@@ -3,12 +3,8 @@
 import numpy as _np
 from scipy.special import hermite, genlaguerre
 from scipy.interpolate import RectBivariateSpline
-from .misc import backward_compatible
+from .bw_compat import backward_compatible
 
-USE_CV2 = False
-
-if USE_CV2:
-    import cv2
 
 USE_SKIMAGE = False
 if USE_SKIMAGE:

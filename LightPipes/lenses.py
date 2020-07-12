@@ -3,8 +3,9 @@
 import numpy as _np
 
 from .field import Field
-from .propagators import Forvard, Fresnel, backward_compatible
+from .propagators import Forvard, Fresnel
 from .misc import PipFFT
+from .bw_compat import backward_compatible
 
 @backward_compatible
 def Axicon(Fin, phi, n1 = 1.5, x_shift = 0.0, y_shift = 0.0 ):

@@ -30,7 +30,7 @@ from scipy.sparse import coo_matrix
 from .field import Field
 from . import tictoc
 from .subs import elim, elimH, elimV
-from .misc import backward_compatible
+from .bw_compat import backward_compatible
 
 @backward_compatible
 def Fresnel(Fin, z):

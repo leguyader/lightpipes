@@ -1,6 +1,9 @@
 from .field import Field
-from .core import BeamMix, Phase, MultPhase, IntAttenuator, CircAperture, GaussHermite, GaussLaguerre, Interpol
-from .misc import PI,Tilt, backward_compatible
+from .core import BeamMix, Phase, MultPhase, IntAttenuator, CircAperture, \
+    GaussHermite, GaussLaguerre, Interpol
+from .units import PI
+from .misc import Tilt
+from .bw_compat import backward_compatible
 
 @backward_compatible
 def PointSource(Fin, x=0.0, y=0.0):

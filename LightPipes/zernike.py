@@ -4,7 +4,7 @@ import numpy as _np
 from .field import Field
 from .core import Phase, PhaseUnwrap, Intensity
 from .zernikemath import zernike
-from .misc import backward_compatible
+from .bw_compat import backward_compatible
 
 @backward_compatible
 def Zernike(Fin, n, m, R, A = 1.0, norm=True, units='opd'):
